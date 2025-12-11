@@ -14,12 +14,22 @@
     box-sizing: border-box;
 }
 
+html {
+    background-color: var(--bg-color);
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
     font-family: var(--font-body);
     line-height: 1.6;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 
 h1,
@@ -84,6 +94,7 @@ ul {
 
 section {
     padding: 5rem 0;
+    width: 100%;
 }
 
 .text-gold {
@@ -91,12 +102,13 @@ section {
 }
 
 /* Navbar - Floating Capsule "Model" */
-/* Navbar - Floating Capsule "Model" */
 .navbar {
     position: fixed;
     top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    /* transform removed to prevent stacking context issue for fixed children */
     width: 90%;
     max-width: 1100px;
     z-index: 1000;
@@ -190,7 +202,8 @@ section {
 /* Hero Section */
 .hero {
     height: 100vh;
-    width: 100%;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
     background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') no-repeat center center/cover;
     display: flex;
     align-items: center;
@@ -446,7 +459,8 @@ footer {
 @media (max-width: 768px) {
     .nav-links {
         position: fixed;
-        right: -100%;
+        right: 0;
+        /* Align to right edge */
         top: 0;
         /* Cover full screen or start from top */
         padding-top: 80px;
@@ -460,12 +474,18 @@ footer {
         height: 100vh;
         /* Full height menu */
         text-align: center;
-        transition: 0.3s;
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s;
         box-shadow: none;
+        transform: translateX(100%);
+        /* Move off-screen without affecting layout width */
+        opacity: 0;
+        visibility: hidden;
     }
 
     .nav-links.active {
-        right: 0;
+        transform: translateX(0);
+        opacity: 1;
+        visibility: visible;
     }
 
     .hamburger {
@@ -474,6 +494,16 @@ footer {
 
     .hero-content h1 {
         font-size: 2.5rem;
+    }
+
+    /* Prevent grid overflow on small screens */
+    .portfolio-grid,
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: 0 1.5rem;
     }
 
     .about-container,
@@ -500,15 +530,16 @@ footer {
 /* Logo Image Style */
 /* Logo Image Style */
 .logo-img {
-    height: 200px;
-    /* Much larger than container to make text big */
+    height: 180px;
+    /* Slightly reduced to fit better if aligning left */
     width: auto;
     display: block;
     position: absolute;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    /* Center the logo in the crop box */
+    left: 0;
+    /* Align to left edge */
+    transform: translateY(-50%);
+    /* Only center vertically */
     /* Mix blend mode to handle background if present */
     filter: brightness(1.2) contrast(1.1);
     /* Slight boost, no invert */
@@ -519,6 +550,6 @@ footer {
 }
 
 .navbar.scrolled .logo-img {
-    height: 100px;
-    /* Slightly smaller on scroll */
+    height: 90px;
+    /* Maintain proportion */
 }
