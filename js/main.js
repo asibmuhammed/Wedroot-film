@@ -55,43 +55,50 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.transition = "opacity 0.6s ease-out, transform 0.6s ease-out";
         observer.observe(el);
     });
-    // Load Instagram Feed from Local JSON
+    // Load Instagram Feed - prefer remote Behold feed, fallback to local JSON
     const instaFeedContainer = document.getElementById('insta-feed');
+    const FEED_URL = 'https://feeds.behold.so/YLpHIukn6OoTSCRTOYRn';
+
+    function renderPosts(data) {
+        const posts = data.posts ? data.posts : (Array.isArray(data) ? data : []);
+
+        posts.forEach(post => {
+            const postElement = document.createElement('div');
+            postElement.classList.add('portfolio-item');
+
+            const captionText = post.prunedCaption || post.caption || '';
+            const altText = captionText.split('\n')[0] || 'Instagram Post';
+
+            postElement.innerHTML = `
+                <img src="${post.mediaUrl}" alt="${altText}">
+                <div class="overlay">
+                    <h3><a href="${post.permalink}" target="_blank" style="color:white; text-decoration:none;">
+                        ${captionText ? (captionText.length > 50 ? captionText.substring(0, 50) + '...' : captionText) : 'View on Instagram'}
+                    </a></h3>
+                </div>
+            `;
+
+            postElement.style.opacity = "0";
+            postElement.style.transform = "translateY(30px)";
+            postElement.style.transition = "opacity 0.6s ease-out, transform 0.6s ease-out";
+
+            instaFeedContainer.appendChild(postElement);
+            observer.observe(postElement);
+        });
+    }
 
     if (instaFeedContainer) {
-        fetch('instagram_data.json')
-            .then(response => response.json())
-            .then(data => {
-                // Check if data is the object with posts array or just the array (handling both just in case)
-                const posts = data.posts ? data.posts : (Array.isArray(data) ? data : []);
-
-                posts.forEach(post => {
-                    const postElement = document.createElement('div');
-                    postElement.classList.add('portfolio-item');
-
-                    // Use prunedCaption if available, otherwise caption, otherwise empty
-                    // Use logic to get the first line of caption for alt text
-                    const captionText = post.prunedCaption || post.caption || '';
-                    const altText = captionText.split('\n')[0] || 'Instagram Post';
-
-                    postElement.innerHTML = `
-                        <img src="${post.mediaUrl}" alt="${altText}">
-                        <div class="overlay">
-                            <h3><a href="${post.permalink}" target="_blank" style="color:white; text-decoration:none;">
-                                ${captionText ? (captionText.length > 50 ? captionText.substring(0, 50) + '...' : captionText) : 'View on Instagram'}
-                            </a></h3>
-                        </div>
-                    `;
-
-                    // Add animation styles to new elements
-                    postElement.style.opacity = "0";
-                    postElement.style.transform = "translateY(30px)";
-                    postElement.style.transition = "opacity 0.6s ease-out, transform 0.6s ease-out";
-
-                    instaFeedContainer.appendChild(postElement);
-                    observer.observe(postElement);
-                });
+        // Try remote Behold feed first, then fall back to local `instagram_data.json` if it fails
+        fetch(FEED_URL)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
             })
+            .catch(err => {
+                console.warn('Behold feed failed, falling back to local JSON:', err);
+                return fetch('instagram_data.json').then(r => r.json());
+            })
+            .then(data => renderPosts(data))
             .catch(error => console.error('Error loading Instagram data:', error));
     }
 
